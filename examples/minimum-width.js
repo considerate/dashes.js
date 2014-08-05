@@ -17,6 +17,8 @@ var rows = [
     }
 ];
 
-var table = dashes(rows, headers);
+var table = dashes(rows, headers, {
+    minWidth: 10
+});
 
 console.log(table);

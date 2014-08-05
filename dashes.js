@@ -22,26 +22,31 @@ function leftPad(text, length) {
     return str;
 }
 
-function generateCell(rows, columnLengths) {
+function generateCell(data, columnWidths) {
     return function (key) {
-        var str = rows[0][key] || '';
+        var str = data[key] || '';
         if (typeof str !== 'string') {
             str = str.toString();
         }
         var ind = str.indexOf('\n');
         if (ind !== -1) {
-            if (!rows[1]) {
-                rows[1] = {};
-            }
-            rows[1][key] = str.substring(ind + 1);
-            return leftPad(str.substring(0, ind), columnLengths[key]);
+            //Before \n padded to column width
+            var current = leftPad(str.substring(0, ind), columnWidths[key]);
+            //Remaining text
+            var next = str.substring(ind + 1);
+            return {
+                current: current, 
+                next: next
+            };
         } else {
-            return leftPad(str, columnLengths[key]);
+            return {
+                current: leftPad(str, columnWidths[key])
+            };
         }
     };
 }
 
-function generateRow(columnLengths) {
+function generateRow(columnWidths) {
     return function(row) {
         var next = row;
         var current;
@@ -50,13 +55,19 @@ function generateRow(columnLengths) {
             current = next;
             next = null;
 
-            var array = [current, next];
-
-            var line = Object.keys(columnLengths)
-            .map(generateCell(array, columnLengths))
+            var cellGenerator = generateCell(current, columnWidths);
+            var line = Object.keys(columnWidths)
+            .map(function(key) {
+                var result = cellGenerator(key);
+                var thisRow = result.current;
+                var nextRow = result.next;
+                if(nextRow) {
+                    next = next || {};
+                    next[key] = nextRow;
+                }
+                return thisRow;
+            })
             .join(' ');
-
-            next = array[1];
 
             rowLines.push(line);
         }
@@ -64,8 +75,8 @@ function generateRow(columnLengths) {
     };
 }
 
-function generateTable(headers, data) {
-    var columnLengths = {};
+function calculateColumnWidths(headers, data, minWidth) {
+    var columnWidths = {};
     data.forEach(function (row) {
         Object.keys(row).forEach(function (key) {
             var str = row[key].toString();
@@ -74,8 +85,8 @@ function generateTable(headers, data) {
                 return part.length;
             }).reduce(max, 0);
 
-            if (!columnLengths[key] || length >= columnLengths[key]) {
-                columnLengths[key] = length;
+            if (!columnWidths[key] || length >= columnWidths[key]) {
+                columnWidths[key] = length;
             }
             if (headers[key] === undefined) {
                 headers[key] = key;
@@ -86,27 +97,41 @@ function generateTable(headers, data) {
     Object.keys(headers).forEach(function (key) {
         var str = headers[key].toString();
         var length = str.length;
-        if (!columnLengths[key] || length >= columnLengths[key]) {
-            columnLengths[key] = length;
+        if (!columnWidths[key] || length >= columnWidths[key]) {
+            columnWidths[key] = length;
         }
     });
+    if(minWidth) {
+        Object.keys(columnWidths).forEach(function(key) {
+            if(columnWidths[key] < minWidth) {
+                columnWidths[key] = minWidth;
+            }
+            columnWidths[key] += 2;
+        });
+    }
+    return columnWidths;
+}
 
-    var keys = Object.keys(columnLengths);
+function generateTable(data, headers, options) {
+    headers = headers || {};
+    options = options || {};
+    var columnWidths = calculateColumnWidths(headers, data, options.minWidth);
+    var keys = Object.keys(columnWidths);
 
-    var totalLength = keys.map(function (key) {
-        return columnLengths[key];
+    var totalWidth = keys.map(function (key) {
+        return columnWidths[key];
     }).reduce(sum, 0);
 
-    var topLine = repeat('-', totalLength + keys.length - 1);
+    var topLine = repeat('-', totalWidth + keys.length - 1);
     var tableHeader = keys.map(function (key) {
-        return leftPad(headers[key], columnLengths[key]);
+        return leftPad(headers[key], columnWidths[key]);
     }).join(' ');
 
     var tableHeaderLine = keys.map(function (key) {
-        return repeat('-', columnLengths[key]);
+        return repeat('-', columnWidths[key]);
     }).join(' ');
 
-    var lines = data.map(generateRow(columnLengths)).join('\n\n');
+    var lines = data.map(generateRow(columnWidths)).join('\n\n');
 
     var table = [topLine, tableHeader, tableHeaderLine, lines, topLine].join('\n');
     return table;
@@ -114,5 +139,5 @@ function generateTable(headers, data) {
 
 
 module.exports = function(data, headers, options) {
-    return generateTable(headers, data);
+    return generateTable(data, headers, options);
 };
