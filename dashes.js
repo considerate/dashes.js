@@ -1,20 +1,3 @@
-var headers = {
-    a: 'hej',
-    b: 'test'
-};
-
-var rows = [
-    {
-        a: 'asd\ndsa',
-        b: 'asd\nzxc',
-        collection: 7
-    },
-    {
-        a:          7,
-        collection: 6457
-    }
-];
-
 function max(a, b) {
     return a > b ? a : b;
 }
@@ -55,7 +38,7 @@ function generateCell(rows, columnLengths) {
         } else {
             return leftPad(str, columnLengths[key]);
         }
-    }
+    };
 }
 
 function generateRow(columnLengths) {
@@ -78,7 +61,7 @@ function generateRow(columnLengths) {
             rowLines.push(line);
         }
         return rowLines.join('\n');
-    }
+    };
 }
 
 function generateTable(headers, data) {
@@ -129,4 +112,7 @@ function generateTable(headers, data) {
     return table;
 }
 
-console.log(generateTable(headers, rows));
+
+module.exports = function(data, headers, options) {
+    return generateTable(headers, data);
+};
