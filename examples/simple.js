@@ -23,13 +23,13 @@ console.log(table);
 
 /*
     Expected output:
-    ---------------------------
-    Description Info collection
-    ----------- ---- ----------
-    asd         asd  7         
-    dsa         zxc            
-    test                       
+    ---------------------------------
+    Description   Info   collection  
+    ------------- ------ ------------
+    asd           asd    7           
+    dsa           zxc                
+    test                             
 
-    7                6457      
-    ---------------------------
+    7                    6457        
+    ---------------------------------
  */

@@ -35,7 +35,7 @@ function generateCell(data, columnWidths) {
             //Remaining text
             var next = str.substring(ind + 1);
             return {
-                current: current, 
+                current: current,
                 next: next
             };
         } else {
@@ -48,6 +48,7 @@ function generateCell(data, columnWidths) {
 
 function generateRow(columnWidths) {
     return function(row) {
+        /*jshint -W083 */
         var next = row;
         var current;
         var rowLines = [];
@@ -61,7 +62,7 @@ function generateRow(columnWidths) {
                 var result = cellGenerator(key);
                 var thisRow = result.current;
                 var nextRow = result.next;
-                if(nextRow) {
+                if (nextRow) {
                     next = next || {};
                     next[key] = nextRow;
                 }
@@ -75,13 +76,15 @@ function generateRow(columnWidths) {
     };
 }
 
-function calculateColumnWidths(headers, data, minWidth) {
+function calculateColumnWidths(headers, data, options) {
+    var minWidth = options.minWidth;
     var columnWidths = {};
-    data.forEach(function (row) {
-        Object.keys(row).forEach(function (key) {
+    var hideHeaders = options.headers === false;
+    data.forEach(function(row) {
+        Object.keys(row).forEach(function(key) {
             var str = row[key].toString();
 
-            var length = str.split('\n').map(function (part) {
+            var length = str.split('\n').map(function(part) {
                 return part.length;
             }).reduce(max, 0);
 
@@ -93,47 +96,65 @@ function calculateColumnWidths(headers, data, minWidth) {
             }
         });
     });
-
-    Object.keys(headers).forEach(function (key) {
-        var str = headers[key].toString();
-        var length = str.length;
-        if (!columnWidths[key] || length >= columnWidths[key]) {
-            columnWidths[key] = length;
-        }
-    });
-    if(minWidth) {
-        Object.keys(columnWidths).forEach(function(key) {
-            if(columnWidths[key] < minWidth) {
-                columnWidths[key] = minWidth;
+    if (!hideHeaders) {
+        Object.keys(headers).forEach(function(key) {
+            var str = headers[key].toString();
+            var length = str.length;
+            if (!columnWidths[key] || length >= columnWidths[key]) {
+                columnWidths[key] = length;
             }
-            columnWidths[key] += 2;
         });
     }
+
+    Object.keys(columnWidths).forEach(function(key) {
+        if (minWidth) {
+            if (columnWidths[key] < minWidth) {
+                columnWidths[key] = minWidth;
+            }
+        }
+        columnWidths[key] += 2;
+    });
+
     return columnWidths;
 }
 
 function generateTable(data, headers, options) {
     headers = headers || {};
     options = options || {};
-    var columnWidths = calculateColumnWidths(headers, data, options.minWidth);
+    var hideHeaders = options.headers === false;
+    if (hideHeaders) {
+        headers = {};
+    }
+    var columnWidths = calculateColumnWidths(headers, data, options);
     var keys = Object.keys(columnWidths);
 
-    var totalWidth = keys.map(function (key) {
+    var totalWidth = keys.map(function(key) {
         return columnWidths[key];
     }).reduce(sum, 0);
 
-    var topLine = repeat('-', totalWidth + keys.length - 1);
-    var tableHeader = keys.map(function (key) {
+    var dashline = repeat('-', totalWidth + keys.length - 1);
+    var tableHeader = keys.map(function(key) {
         return leftPad(headers[key], columnWidths[key]);
     }).join(' ');
 
-    var tableHeaderLine = keys.map(function (key) {
+    var headerBottomLine = keys.map(function(key) {
         return repeat('-', columnWidths[key]);
     }).join(' ');
 
-    var lines = data.map(generateRow(columnWidths)).join('\n\n');
+    var header;
+    if (hideHeaders) {
+        header = [];
+    } else {
+        header = [dashline, tableHeader];
+    }
+    header.push(headerBottomLine);
 
-    var table = [topLine, tableHeader, tableHeaderLine, lines, topLine].join('\n');
+    var lines = data.map(generateRow(columnWidths)).join('\n\n');
+    var body = [lines];
+
+    var footer = [dashline];
+
+    var table = header.concat(body).concat(footer).join('\n');
     return table;
 }
 
