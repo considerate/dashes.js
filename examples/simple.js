@@ -1,8 +1,8 @@
 var dashes = require('..');
 
 var headers = {
-    a: 'hej',
-    b: 'test'
+    a: 'Description',
+    b: 'Info'
 };
 
 var rows = [
@@ -20,3 +20,16 @@ var rows = [
 var table = dashes(rows, headers);
 
 console.log(table);
+
+/*
+    Expected output:
+    ---------------------------
+    Description Info collection
+    ----------- ---- ----------
+    asd         asd  7         
+    dsa         zxc            
+    test                       
+
+    7                6457      
+    ---------------------------
+ */
