@@ -29,15 +29,15 @@ var table = dashes(rows, headers);
 console.log(table);
 
 /*
-	Expected output:
-	---------------------------
-	Description Info collection
-	----------- ---- ----------
-	asd         asd  7         
-	dsa         zxc            
-	test                       
+    Expected output:
+    ---------------------------------
+    Description   Info   collection  
+    ------------- ------ ------------
+    asd           asd    7           
+    dsa           zxc                
+    test                             
 
-	7                6457      
-	---------------------------
+    7                    6457        
+    ---------------------------------
  */
 ```
