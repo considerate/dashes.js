@@ -5,7 +5,7 @@ Convert Javascript Objects to text tables for pandoc multiline tables.
 ##Usage
 
 ```javascript
-var dashes = require('..');
+var dashes = require('dashes.js');
 
 var headers = {
     a: 'Description',
