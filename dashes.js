@@ -69,22 +69,40 @@ function rightPad(text, length) {
     return str;
 }
 
-function pad(text, length) {
-    if(typeof text === 'string') {
-        return leftPad(text, length);
-    } else if(typeof text === 'number') {
-        return rightPad(numeral(text).format('0,0.00'), length);
+function pad(text, align, length) {
+    var str;
+    var padders = {
+        'left': leftPad,
+        'right': rightPad
+    };
+
+    if(typeof text === 'number') {
+        str = numeral(text).format('0,0.00');
+    } else if (typeof text !== 'string') {
+        str = text.toString();
     } else {
-        return leftPad(text.toString(), length);
+        str = text;
     }
+    return padders[align](str, length);
 }
 
-function generateCell (str, width) {
+function generateCell (str, width, header) {
+
+    var align = 'left';
+    if(typeof str === 'number') {
+        align = 'right';
+    }
+
+    if(header.align) {
+        align = header.align;
+    }
+
     if(typeof str === 'string') {
         var ind = str.indexOf('\n');
         if (ind !== -1) {
             //Before \n padded to column width
-            var current = leftPad(str.substring(0, ind), width);
+            
+            var current = pad(str.substring(0, ind), align, width);
             //Remaining text
             var next = str.substring(ind + 1);
             return {
@@ -94,7 +112,7 @@ function generateCell (str, width) {
         } 
     }
     return {
-        current: pad(str, width)
+        current: pad(str, align, width)
     };
 }
 
@@ -106,7 +124,7 @@ function generateRow(headers, columnWidths) {
                 var next = [];
                 var line = row.map(function (text, index) {
                     var width = columnWidths[index];
-                    var result = generateCell(text, width);
+                    var result = generateCell(text, width, headers[index]);
                     var remainder = result.next;
                     if(remainder) {
                         next[index] = remainder;
@@ -127,7 +145,7 @@ function generateRow(headers, columnWidths) {
                     var key = header.key;
                     var text = obj[key] || '';
                     var width = columnWidths[index];
-                    var result = generateCell(text, width);
+                    var result = generateCell(text, width, headers[index]);
                     var remainder = result.next;
                     if(remainder) {
                         hasNext = true;
