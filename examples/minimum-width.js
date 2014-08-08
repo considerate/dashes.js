@@ -1,9 +1,9 @@
 var dashes = require('..');
 
-var headers = {
-    a: 'hej',
-    b: 'test'
-};
+var headers = [
+    {key: 'a', title : 'hej'},
+    {key: 'b', title: 'test'}
+];
 
 var rows = [
     {

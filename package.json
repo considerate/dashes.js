@@ -1,6 +1,6 @@
 {
   "name": "dashes.js",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Generator for Markdown Multiline tables.",
   "main": "dashes.js",
   "scripts": {
@@ -14,12 +14,17 @@
     "json",
     "markdown",
     "table",
-    "pandoc"
+    "pandoc",
+    "dashes.js",
+    "dashes"
   ],
   "author": "Viktor Kronvall, Christoffer Ackelman",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/considerate/dashes.js/issues"
   },
-  "homepage": "https://github.com/considerate/dashes.js"
+  "homepage": "https://github.com/considerate/dashes.js",
+  "dependencies": {
+    "numeral": "^1.5.3"
+  }
 }

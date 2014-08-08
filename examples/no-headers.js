@@ -13,7 +13,7 @@ var rows = [
     }
 ];
 
-var table = dashes(rows, {}, {
+var table = dashes(rows, [], {
     headers: false
 });
 
@@ -21,11 +21,11 @@ console.log(table);
 
 /*
     Expected output:
-    ------ ----- ------
-    asd    asd   7     
-    dsa    zxc         
-    test               
+    ------ ----- ----------
+    asd    asd         7,00
+    dsa    zxc             
+    test                   
 
-    7            6457  
-    -------------------
+      7,00         6 457,00
+    -----------------------
  */

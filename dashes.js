@@ -1,3 +1,38 @@
+var numeral = require('numeral');
+
+(function () {
+    var language = {
+        delimiters: {
+            thousands: ' ',
+            decimal: ','
+        },
+        abbreviations: {
+            thousand: 'k',
+            million: 'M',
+            billion: 'G',
+            trillion: 'T'
+        },
+        ordinal: function (number) {
+            if(number == 11) {
+                return 'e';
+            }
+            var b = number % 10;
+            if(b === 1 || b === 2) {
+                return 'a';
+            } else {
+                return 'e';
+            }
+            return '.';
+        },
+        currency: {
+            symbol: ' kr'
+        }
+    };
+    numeral.language('sv-SE', language);
+}());
+numeral.language('sv-SE');
+
+
 function max(a, b) {
     return a > b ? a : b;
 }
@@ -22,134 +57,200 @@ function leftPad(text, length) {
     return str;
 }
 
-function generateCell(data, columnWidths) {
-    return function (key) {
-        var str = data[key] || '';
-        if (typeof str !== 'string') {
-            str = str.toString();
-        }
+function rightPad(text, length) {
+    var str = text || '';
+    if (typeof str !== 'string') {
+        str = str.toString();
+    }
+    var l = length - str.length;
+    if (l > 0) {
+        return repeat(' ', l) + str;
+    }
+    return str;
+}
+
+function pad(text, length) {
+    if(typeof text === 'string') {
+        return leftPad(text, length);
+    } else if(typeof text === 'number') {
+        return rightPad(numeral(text).format('0,0.00'), length);
+    } else {
+        return leftPad(text.toString(), length);
+    }
+}
+
+function generateCell (str, width) {
+    if(typeof str === 'string') {
         var ind = str.indexOf('\n');
         if (ind !== -1) {
             //Before \n padded to column width
-            var current = leftPad(str.substring(0, ind), columnWidths[key]);
+            var current = leftPad(str.substring(0, ind), width);
             //Remaining text
             var next = str.substring(ind + 1);
             return {
                 current: current,
                 next: next
             };
-        } else {
-            return {
-                current: leftPad(str, columnWidths[key])
-            };
-        }
+        } 
+    }
+    return {
+        current: pad(str, width)
     };
 }
 
-function generateRow(columnWidths) {
+function generateRow(headers, columnWidths) {
     return function(row) {
-        /*jshint -W083 */
-        var next = row;
-        var current;
-        var rowLines = [];
-        while (next) {
-            current = next;
-            next = null;
-
-            var cellGenerator = generateCell(current, columnWidths);
-            var line = Object.keys(columnWidths)
-            .map(function(key) {
-                var result = cellGenerator(key);
-                var thisRow = result.current;
-                var nextRow = result.next;
-                if (nextRow) {
-                    next = next || {};
-                    next[key] = nextRow;
+        var lines;
+        if(Array.isArray(row)) {
+            lines =  (function generateArrayRow(row) {
+                var next = [];
+                var line = row.map(function (text, index) {
+                    var width = columnWidths[index];
+                    var result = generateCell(text, width);
+                    var remainder = result.next;
+                    if(remainder) {
+                        next[index] = remainder;
+                    }
+                    return result.current;
+                }).join(' ');
+                if(next.length) {
+                    line += '\n';
+                    line += generateArrayRow(next);
                 }
-                return thisRow;
-            })
-            .join(' ');
-
-            rowLines.push(line);
+                return line;
+            })(row);
+        } else {
+            lines = (function generateObjectRow(obj) {
+                var next = {};
+                var hasNext = false;
+                var line = headers.map(function(header, index) {
+                    var key = header.key;
+                    var text = obj[key] || '';
+                    var width = columnWidths[index];
+                    var result = generateCell(text, width);
+                    var remainder = result.next;
+                    if(remainder) {
+                        hasNext = true;
+                        next[key] = remainder;
+                    }
+                    return result.current;
+                }).join(' ');
+                if(hasNext) {
+                    line += '\n';
+                    line += generateObjectRow(next);
+                }
+                return line;
+            })(row);
         }
-        return rowLines.join('\n');
+        return lines;
     };
+}
+
+function calculateCellWidth(str, index, columnWidths) {
+    if(typeof str === 'number') {
+        str = numeral(str).format('0,0.00');
+    }
+
+    var length = str.split('\n').map(function(part) {
+        return part.length;
+    }).reduce(max, 0);
+
+    if (!columnWidths[index] || length >= columnWidths[index]) {
+        columnWidths[index] = length;
+    }
 }
 
 function calculateColumnWidths(headers, data, options) {
     var minWidth = options.minWidth;
-    var columnWidths = {};
-    var hideHeaders = options.headers === false;
+    var columnWidths = [];
+    var hideHeaders = options.headers === false || headers.length === 0;
     data.forEach(function(row) {
-        Object.keys(row).forEach(function(key) {
-            var str = row[key].toString();
-
-            var length = str.split('\n').map(function(part) {
-                return part.length;
-            }).reduce(max, 0);
-
-            if (!columnWidths[key] || length >= columnWidths[key]) {
-                columnWidths[key] = length;
-            }
-            if (headers[key] === undefined) {
-                headers[key] = key;
-            }
-        });
+        if(Array.isArray(row)) {
+            row.forEach(function(title, index) {
+                calculateCellWidth(title, index, columnWidths);
+            });
+        }
+        else if(typeof row === 'object') {
+            Object.keys(row).forEach(function(key) {
+                var index = headers.map(function(header) {
+                    return header.key;
+                }).indexOf(key);
+                if(index === -1) {
+                    headers.push({
+                        key: key,
+                        title: key
+                    });
+                    index = headers.length-1;
+                }
+                var str = row[key];
+                calculateCellWidth(str, index, columnWidths);
+            });
+        }
     });
-    if (!hideHeaders) {
-        Object.keys(headers).forEach(function(key) {
-            var str = headers[key].toString();
-            var length = str.length;
-            if (!columnWidths[key] || length >= columnWidths[key]) {
-                columnWidths[key] = length;
+    if(!hideHeaders) {
+        headers.forEach(function(header, key) {
+            var title = header;
+            if(typeof header === 'object') {
+                title = header.title;
             }
+            calculateCellWidth(title, key, columnWidths);
         });
     }
 
-    Object.keys(columnWidths).forEach(function(key) {
+    columnWidths.forEach(function(width, index) {
+        var header = headers[index] || {};
+        var minWidth = header.minWidth || options.minWidth;
         if (minWidth) {
-            if (columnWidths[key] < minWidth) {
-                columnWidths[key] = minWidth;
+            if (width < minWidth) {
+                columnWidths[index] = minWidth;
             }
         }
-        columnWidths[key] += 2;
+        columnWidths[index] += 2;
     });
 
     return columnWidths;
 }
 
 function generateTable(data, headers, options) {
-    headers = headers || {};
+    headers = headers || [];
     options = options || {};
+
+    headers = headers.map(function(header) {
+        if(typeof header === 'string') {
+            return {
+                title: header
+            };
+        }
+        return header;
+    });
+
     var hideHeaders = options.headers === false;
     if (hideHeaders) {
-        headers = {};
+        headers = [];
     }
     var columnWidths = calculateColumnWidths(headers, data, options);
-    var keys = Object.keys(columnWidths);
+    var totalWidth = columnWidths.reduce(sum, 0);
 
-    var totalWidth = keys.map(function(key) {
-        return columnWidths[key];
-    }).reduce(sum, 0);
-
-    var dashline = repeat('-', totalWidth + keys.length - 1);
-    var tableHeader = keys.map(function(key) {
-        return leftPad(headers[key], columnWidths[key]);
+    var dashline = repeat('-', totalWidth + columnWidths.length - 1);
+    var tableHeader = headers.map(function(header, key) {
+        var width = columnWidths[key];
+        var title = header.title;
+        return leftPad(title, width);
     }).join(' ');
 
-    var headerBottomLine = keys.map(function(key) {
-        return repeat('-', columnWidths[key]);
+    var headerBottomLine = columnWidths.map(function(width) {
+        return repeat('-', width);
     }).join(' ');
 
     var header;
-    if (hideHeaders) {
+    if (headers.length === 0 || hideHeaders) {
         header = [];
     } else {
         header = [dashline, tableHeader];
     }
     header.push(headerBottomLine);
 
-    var lines = data.map(generateRow(columnWidths)).join('\n\n');
+    var lines = data.map(generateRow(headers, columnWidths)).join('\n\n');
     var body = [lines];
 
     var footer = [dashline];

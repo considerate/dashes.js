@@ -1,9 +1,9 @@
 var dashes = require('..');
 
-var headers = {
-    a: 'Description',
-    b: 'Info'
-};
+var headers = [
+    {title: 'Description', key: 'a'},
+    {title: 'Info', key: 'b'}
+];
 
 var rows = [
     {
@@ -26,10 +26,11 @@ console.log(table);
     ---------------------------------
     Description   Info   collection  
     ------------- ------ ------------
-    asd           asd    7           
+    asd           asd            7,00
     dsa           zxc                
     test                             
 
-    7                    6457        
+             7,00            6 457,00
     ---------------------------------
  */
+

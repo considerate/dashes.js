@@ -1,11 +1,4 @@
-#dashes.js
-
-Convert Javascript Objects to text tables for pandoc multiline tables.
-
-##Usage
-
-```javascript
-var dashes = require('dashes.js');
+var dashes = require('..');
 
 var headers = [
     {title: 'Description'},
@@ -40,4 +33,3 @@ console.log(table);
                          7,00 info   Hello  
     ----------------------------------------
  */
-```
