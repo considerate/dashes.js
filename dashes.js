@@ -255,7 +255,6 @@ function generateTable(data, headers, options) {
         var width = columnWidths[key];
         var title = header.title || '';
         var align = header.align || 'left';
-        console.log(header, key, width, title, align);
         return pad(title, align, width);
     }).join(' ');
 

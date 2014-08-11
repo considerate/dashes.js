@@ -1,6 +1,6 @@
 {
   "name": "dashes.js",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Generator for Markdown Multiline tables.",
   "main": "dashes.js",
   "scripts": {
