@@ -102,7 +102,8 @@ function generateCell (str, width, header) {
         if (ind !== -1) {
             //Before \n padded to column width
             
-            var current = pad(str.substring(0, ind), align, width);
+            var current = pad(str.substring(0, ind), align, width-1);
+            current += '\\';
             //Remaining text
             var next = str.substring(ind + 1);
             return {

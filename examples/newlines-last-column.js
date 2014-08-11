@@ -2,7 +2,7 @@ var dashes = require('..');
 
 var headers = [
     {title: 'Description'},
-    'Info'
+    {title: 'Info', align: 'right'}
 ];
 
 var rows = [
@@ -12,7 +12,7 @@ var rows = [
     ],
     [
         7,
-        'info\nHello there\nHi\n',
+        'info\nHello there\nHi',
     ]
 ];
 
