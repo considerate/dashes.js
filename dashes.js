@@ -122,9 +122,11 @@ function generateRow(headers, columnWidths) {
         if(Array.isArray(row)) {
             lines =  (function generateArrayRow(row) {
                 var next = [];
-                var line = row.map(function (text, index) {
+
+                var line = headers.map(function (header, index) {
+                    var text = row[index] || '';
                     var width = columnWidths[index];
-                    var result = generateCell(text, width, headers[index]);
+                    var result = generateCell(text, width, header);
                     var remainder = result.next;
                     if(remainder) {
                         next[index] = remainder;
@@ -145,7 +147,7 @@ function generateRow(headers, columnWidths) {
                     var key = header.key;
                     var text = obj[key] || '';
                     var width = columnWidths[index];
-                    var result = generateCell(text, width, headers[index]);
+                    var result = generateCell(text, width, header);
                     var remainder = result.next;
                     if(remainder) {
                         hasNext = true;
@@ -243,9 +245,6 @@ function generateTable(data, headers, options) {
     });
 
     var hideHeaders = options.headers === false;
-    if (hideHeaders) {
-        headers = [];
-    }
     var columnWidths = calculateColumnWidths(headers, data, options);
     var totalWidth = columnWidths.reduce(sum, 0);
 
