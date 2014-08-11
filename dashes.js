@@ -71,6 +71,7 @@ function rightPad(text, length) {
 
 function pad(text, align, length) {
     var str;
+    align = align || 'left';
     var padders = {
         'left': leftPad,
         'right': rightPad
@@ -252,8 +253,10 @@ function generateTable(data, headers, options) {
     var dashline = repeat('-', totalWidth + columnWidths.length - 1);
     var tableHeader = headers.map(function(header, key) {
         var width = columnWidths[key];
-        var title = header.title;
-        return leftPad(title, width);
+        var title = header.title || '';
+        var align = header.align || 'left';
+        console.log(header, key, width, title, align);
+        return pad(title, align, width);
     }).join(' ');
 
     var headerBottomLine = columnWidths.map(function(width) {
